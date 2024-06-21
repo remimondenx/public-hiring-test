@@ -56,7 +56,7 @@ const hamCheesePizza = {
     { name: "ham", value: "2", unit: "g" },
     { name: "cheese", value: "15", unit: "g" },
     { name: "tomato", value: "4", unit: "g" },
-    { name: "floor", value: "7", unit: "g" },
+    { name: "flour", value: "7", unit: "g" },
     { name: "oliveOil", value: "0.7", unit: "l" },
   ],
 };

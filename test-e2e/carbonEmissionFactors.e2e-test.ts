@@ -4,7 +4,10 @@ import * as request from "supertest";
 import { dataSource } from "../config/dataSource";
 import { AppModule } from "../src/app.module";
 import { CarbonEmissionFactor } from "../src/carbonEmissionFactor/carbonEmissionFactor.entity";
-import { getTestEmissionFactor } from "../src/seed-dev-data";
+import {
+  CHEESE_EMISSION_FACTOR,
+  HAM_EMISSION_FACTOR,
+} from "../src/carbonEmissionFactor/test/carbonEmissionFactor.constants";
 
 beforeAll(async () => {
   await dataSource.initialize();
@@ -14,6 +17,7 @@ afterAll(async () => {
   await dataSource.destroy();
 });
 
+// TEST
 describe("CarbonEmissionFactorsController", () => {
   let app: INestApplication;
   let defaultCarbonEmissionFactors: CarbonEmissionFactor[];
@@ -28,7 +32,7 @@ describe("CarbonEmissionFactorsController", () => {
 
     await dataSource
       .getRepository(CarbonEmissionFactor)
-      .save([getTestEmissionFactor("ham"), getTestEmissionFactor("beef")]);
+      .save([HAM_EMISSION_FACTOR, CHEESE_EMISSION_FACTOR]);
 
     defaultCarbonEmissionFactors = await dataSource
       .getRepository(CarbonEmissionFactor)

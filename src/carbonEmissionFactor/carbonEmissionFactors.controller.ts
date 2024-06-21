@@ -6,25 +6,28 @@ import { CreateCarbonEmissionFactorDto } from "./dto/create-carbonEmissionFactor
 @Controller("carbon-emission-factors")
 export class CarbonEmissionFactorsController {
   constructor(
-    private readonly carbonEmissionFactorService: CarbonEmissionFactorsService
+    private readonly carbonEmissionFactorsService: CarbonEmissionFactorsService
   ) {}
 
   @Get()
   getCarbonEmissionFactors(): Promise<CarbonEmissionFactor[]> {
     Logger.log(
-      `[carbon-emission-factors] [GET] CarbonEmissionFactor: getting all CarbonEmissionFactors`
+      `[carbon-emission-factors] [GET] CarbonEmissionFactors: getting all CarbonEmissionFactors`
     );
-    return this.carbonEmissionFactorService.findAll();
+
+    return this.carbonEmissionFactorsService.findAll();
   }
 
   @Post()
-  createCarbonEmissionFactors(
-    @Body() carbonEmissionFactors: CreateCarbonEmissionFactorDto[]
+  async createCarbonEmissionFactors(
+    @Body() carbonEmissionFactorDtos: CreateCarbonEmissionFactorDto[]
   ): Promise<CarbonEmissionFactor[] | null> {
-    ``;
+    const carbonEmissionFactors: CarbonEmissionFactor[] | null =
+      await this.carbonEmissionFactorsService.saveAll(carbonEmissionFactorDtos);
     Logger.log(
-      `[carbon-emission-factors] [POST] CarbonEmissionFactor: ${carbonEmissionFactors} created`
+      `[carbon-emission-factors] [POST] CarbonEmissionFactors: ${carbonEmissionFactors} created`
     );
-    return this.carbonEmissionFactorService.save(carbonEmissionFactors);
+
+    return carbonEmissionFactors;
   }
 }

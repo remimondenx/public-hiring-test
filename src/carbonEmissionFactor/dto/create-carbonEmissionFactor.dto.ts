@@ -1,6 +1,9 @@
+import { CARBON_EMISSION_FACTOR_SOURCE } from "../../shared/enum/carbonEmissionFactorSource";
+import { UNIT } from "../../shared/enum/unit";
+
 export class CreateCarbonEmissionFactorDto {
   name: string;
-  unit: string;
+  unit: UNIT;
   emissionCO2eInKgPerUnit: number;
-  source: string;
+  source: CARBON_EMISSION_FACTOR_SOURCE;
 }
