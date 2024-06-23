@@ -10,24 +10,26 @@ export class CarbonEmissionFactorsController {
   ) {}
 
   @Get()
-  getCarbonEmissionFactors(): Promise<CarbonEmissionFactor[]> {
+  async getCarbonEmissionFactors(): Promise<CarbonEmissionFactor[]> {
+    const carbonEmissionFactors: CarbonEmissionFactor[] =
+      await this.carbonEmissionFactorsService.findAll();
     Logger.log(
-      `[carbon-emission-factors] [GET] CarbonEmissionFactors: getting all CarbonEmissionFactors`
-    );
-
-    return this.carbonEmissionFactorsService.findAll();
-  }
-
-  @Post()
-  async createCarbonEmissionFactors(
-    @Body() carbonEmissionFactorDtos: CreateCarbonEmissionFactorDto[]
-  ): Promise<CarbonEmissionFactor[] | null> {
-    const carbonEmissionFactors: CarbonEmissionFactor[] | null =
-      await this.carbonEmissionFactorsService.saveAll(carbonEmissionFactorDtos);
-    Logger.log(
-      `[carbon-emission-factors] [POST] CarbonEmissionFactors: ${carbonEmissionFactors} created`
+      `[carbon-emission-factors] [GET] CarbonEmissionFactors: carbon emission factors retrieved`
     );
 
     return carbonEmissionFactors;
+  }
+
+  @Post()
+  async createCarbonEmissionFactor(
+    @Body() carbonEmissionFactorDto: CreateCarbonEmissionFactorDto
+  ): Promise<CarbonEmissionFactor | null> {
+    const carbonEmissionFactor: CarbonEmissionFactor | null =
+      await this.carbonEmissionFactorsService.create(carbonEmissionFactorDto);
+    Logger.log(
+      `[carbon-emission-factors] [POST] CarbonEmissionFactor: carbon emission factor created`
+    );
+
+    return carbonEmissionFactor;
   }
 }

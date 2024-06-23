@@ -31,4 +31,20 @@ export const OLIVE_OIL = new Ingredient({
   quantity: 0.3,
 });
 
-export const INGREDIENTS = [HAM, CHEESE, TOMATO, FLOUR, OLIVE_OIL];
+export const HAM_CHEESE_PIZZA_INGREDIENTS = [
+  HAM,
+  CHEESE,
+  TOMATO,
+  FLOUR,
+  OLIVE_OIL,
+];
+
+export const hamCheesePizzaIngredientsFactory = (): Ingredient[] =>
+  HAM_CHEESE_PIZZA_INGREDIENTS.map(
+    ({ name, unit, quantity }) =>
+      new Ingredient({
+        name,
+        unit,
+        quantity,
+      })
+  );

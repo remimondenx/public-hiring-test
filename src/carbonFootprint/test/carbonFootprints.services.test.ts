@@ -1,64 +1,155 @@
+import { NotFoundException } from "@nestjs/common";
 import { Repository } from "typeorm";
 import { GreenlyDataSource, dataSource } from "../../../config/dataSource";
+import { CarbonEmissionFactor } from "../../carbonEmissionFactor/carbonEmissionFactor.entity";
+import { CarbonEmissionFactorsService } from "../../carbonEmissionFactor/carbonEmissionFactors.service";
+import { carbonEmissionFactorsFactory } from "../../carbonEmissionFactor/test/carbonEmissionFactor.constants";
 import { Recipe } from "../../recipe/recipe.entity";
-import { HAM_CHEESE_PIZZA } from "../../recipe/test/recipe.constants";
+import { RecipesService } from "../../recipe/recipes.service";
+import { hamCheesePizzaFactory } from "../../recipe/test/recipe.constants";
 import { CARBON_EMISSION_FACTOR_SOURCE } from "../../shared/enum/carbonEmissionFactorSource";
+import { C02eEmissionsCalculatorService } from "../c02eEmissionsCalculator.service";
 import { CarbonFootprint } from "../carbonFootprint.entity";
 import { CarbonFootprintsService } from "../carbonFootprints.service";
-import { HAM_CHEESE_PIZZA_CARBON_FOOTPRINT } from "./carbonFootprint.constants";
+import { hamCheesePizzaCarbonFootprintFactory } from "./carbonFootprint.constants";
 
 let carbonFootprintsService: CarbonFootprintsService;
 let carbonFootprintRepository: Repository<CarbonFootprint>;
 let recipeRepository: Repository<Recipe>;
+let carbonEmissionFactorRepository: Repository<CarbonEmissionFactor>;
 
 beforeAll(async () => {
   await dataSource.initialize();
-
-  carbonFootprintsService = new CarbonFootprintsService(
-    dataSource.getRepository(CarbonFootprint)
-  );
   carbonFootprintRepository = await dataSource.getRepository(CarbonFootprint);
   recipeRepository = await dataSource.getRepository(Recipe);
+  carbonEmissionFactorRepository =
+    await dataSource.getRepository(CarbonEmissionFactor);
+
+  let recipesService: RecipesService = new RecipesService(recipeRepository);
+  let carbonEmissionFactorsService: CarbonEmissionFactorsService =
+    new CarbonEmissionFactorsService(carbonEmissionFactorRepository);
+
+  carbonFootprintsService = new CarbonFootprintsService(
+    carbonFootprintRepository,
+    carbonEmissionFactorsService,
+    recipesService
+  );
 });
 
 beforeEach(async () => {
   await GreenlyDataSource.cleanDatabase();
-});
-
-describe("CarbonFootprints.service", () => {
-  it("should save new carbonFootprints", async () => {
-    await recipeRepository.save(HAM_CHEESE_PIZZA);
-    await carbonFootprintsService.saveAll([HAM_CHEESE_PIZZA_CARBON_FOOTPRINT]);
-
-    const retrievedHamCheesePizzaCarbonFootprint: CarbonFootprint | null =
-      await carbonFootprintRepository.findOne({
-        where: { recipe: HAM_CHEESE_PIZZA },
-        relations: ["recipe", "recipe.ingredients"],
-      });
-    expect(retrievedHamCheesePizzaCarbonFootprint?.recipe).toEqual(
-      HAM_CHEESE_PIZZA
-    );
-    expect(retrievedHamCheesePizzaCarbonFootprint?.source).toBe(
-      CARBON_EMISSION_FACTOR_SOURCE.AGRYBALISE
-    );
-    expect(
-      retrievedHamCheesePizzaCarbonFootprint?.emissionCO2eInKgPerUnit
-    ).toBe(0.224);
-  });
-
-  it("should retrieve carbonFootprints", async () => {
-    let carbonFootprints: CarbonFootprint[] =
-      await carbonFootprintsService.findAll();
-    expect(carbonFootprints).toHaveLength(0);
-
-    await recipeRepository.save(HAM_CHEESE_PIZZA);
-    await carbonFootprintRepository.save(HAM_CHEESE_PIZZA_CARBON_FOOTPRINT);
-
-    carbonFootprints = await carbonFootprintsService.findAll();
-    expect(carbonFootprints).toHaveLength(1);
-  });
+  jest.clearAllMocks();
 });
 
 afterAll(async () => {
   await dataSource.destroy();
+});
+
+describe("CarbonFootprints.service", () => {
+  describe("findAll", () => {
+    it("should retrieve carbonFootprints", async () => {
+      const hamCheesePizzaCarbonFootprint: CarbonFootprint =
+        hamCheesePizzaCarbonFootprintFactory();
+      await recipeRepository.save(hamCheesePizzaCarbonFootprint.recipe);
+      await carbonFootprintRepository.save(hamCheesePizzaCarbonFootprint);
+
+      const carbonFootprints: CarbonFootprint[] =
+        await carbonFootprintsService.findAll();
+      expect(carbonFootprints).toHaveLength(1);
+      expect(carbonFootprints[0].emissionCO2eInKgPerUnit).toEqual(
+        hamCheesePizzaCarbonFootprint.emissionCO2eInKgPerUnit
+      );
+      expect(carbonFootprints[0].source).toEqual(
+        hamCheesePizzaCarbonFootprint.source
+      );
+    });
+
+    it("should throw when carbon footprints are not found", async () => {
+      expect(carbonFootprintsService.findAll()).rejects.toThrow(
+        "No carbon footprints found"
+      );
+    });
+  });
+
+  describe("findOneById", () => {
+    it("should find a carbon footprint by id", async () => {
+      const hamCheesePizzaCarbonFootprint: CarbonFootprint =
+        hamCheesePizzaCarbonFootprintFactory();
+      await recipeRepository.save(hamCheesePizzaCarbonFootprint.recipe);
+      const savedCarbonFootprint: CarbonFootprint =
+        await carbonFootprintRepository.save(hamCheesePizzaCarbonFootprint);
+
+      const retrievedCarbonFootprint: CarbonFootprint =
+        await carbonFootprintsService.findOneById(savedCarbonFootprint.id);
+
+      expect(retrievedCarbonFootprint.id).toBe(savedCarbonFootprint.id);
+      expect(retrievedCarbonFootprint.emissionCO2eInKgPerUnit).toBe(
+        hamCheesePizzaCarbonFootprint.emissionCO2eInKgPerUnit
+      );
+      expect(retrievedCarbonFootprint.source).toBe(
+        hamCheesePizzaCarbonFootprint.source
+      );
+    });
+
+    it("should throw if carbon footprint not found", async () => {
+      await expect(carbonFootprintsService.findOneById(1)).rejects.toThrow(
+        new NotFoundException("No carbon footprint found for id 1")
+      );
+    });
+  });
+
+  describe("computeCarbonFootprint", () => {
+    it("should compute and save a carbon footprint", async () => {
+      const computeC02eEmissionSpy = jest.spyOn(
+        C02eEmissionsCalculatorService,
+        "computeC02eEmission"
+      );
+
+      const hamCheesePizza: Recipe = hamCheesePizzaFactory();
+      const carbonEmissionFactors: CarbonEmissionFactor[] =
+        carbonEmissionFactorsFactory();
+
+      await recipeRepository.save(hamCheesePizza);
+      await carbonEmissionFactorRepository.save(carbonEmissionFactors);
+
+      const carbonFootprint: CarbonFootprint =
+        await carbonFootprintsService.computeCarbonFootprint(
+          hamCheesePizza.id,
+          CARBON_EMISSION_FACTOR_SOURCE.AGRYBALISE
+        );
+
+      expect(carbonFootprint.recipe).toEqual(hamCheesePizza);
+      expect(carbonFootprint.source).toBe(
+        CARBON_EMISSION_FACTOR_SOURCE.AGRYBALISE
+      );
+      expect(carbonFootprint.emissionCO2eInKgPerUnit).toBe(0.224);
+
+      expect((await carbonFootprintRepository.find()).length).toBe(1);
+      expect(computeC02eEmissionSpy).toHaveBeenCalled();
+    });
+
+    it("should directly return a carbon footprint if already existing", async () => {
+      const computeC02eEmissionSpy = jest.spyOn(
+        C02eEmissionsCalculatorService,
+        "computeC02eEmission"
+      );
+
+      const hamCheesePizzaCarbonFootprint: CarbonFootprint =
+        hamCheesePizzaCarbonFootprintFactory();
+
+      await recipeRepository.save(hamCheesePizzaCarbonFootprint.recipe);
+      await carbonFootprintRepository.save(hamCheesePizzaCarbonFootprint);
+
+      const computedCarbonFootprint: CarbonFootprint =
+        await carbonFootprintsService.computeCarbonFootprint(
+          hamCheesePizzaCarbonFootprint.recipe.id,
+          CARBON_EMISSION_FACTOR_SOURCE.AGRYBALISE
+        );
+
+      expect(computedCarbonFootprint.id).toEqual(
+        hamCheesePizzaCarbonFootprint.id
+      );
+      expect(computeC02eEmissionSpy).not.toHaveBeenCalled();
+    });
+  });
 });

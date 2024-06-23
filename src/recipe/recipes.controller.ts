@@ -8,20 +8,21 @@ export class RecipesController {
   constructor(private readonly recipesService: RecipesService) {}
 
   @Get()
-  getRecipes(): Promise<Recipe[]> {
-    Logger.log(`[recipes] [GET] Recipes: getting all Recipes`);
+  async getRecipes(): Promise<Recipe[]> {
+    const recipes: Recipe[] = await this.recipesService.findAll();
 
-    return this.recipesService.findAll();
+    Logger.log(`[recipes] [GET] Recipes: recipes retrieved`);
+
+    return recipes;
   }
 
   @Post()
-  async createRecipes(
-    @Body() recipeDtos: CreateRecipeDto[]
-  ): Promise<Recipe[] | null> {
-    const recipes: Recipe[] | null =
-      await this.recipesService.saveAll(recipeDtos);
-    Logger.log(`[recipes] [POST] Recipes: ${recipes} created`);
+  async createRecipe(
+    @Body() recipeDto: CreateRecipeDto
+  ): Promise<Recipe | null> {
+    const recipe: Recipe | null = await this.recipesService.create(recipeDto);
+    Logger.log(`[recipes] [POST] Recipe: recipe created`);
 
-    return recipes;
+    return recipe;
   }
 }

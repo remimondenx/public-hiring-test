@@ -31,7 +31,7 @@ export const FLOUR_EMISSION_FACTOR = new CarbonEmissionFactor({
 });
 
 export const VINEGAR_EMISSION_FACTOR = new CarbonEmissionFactor({
-  name: "blueCheese",
+  name: "vinegar",
   unit: UNIT.KG,
   emissionCO2eInKgPerUnit: 0.34,
   source: CARBON_EMISSION_FACTOR_SOURCE.AGRYBALISE,
@@ -52,3 +52,14 @@ export const CARBON_EMISSION_FACTORS = [
   VINEGAR_EMISSION_FACTOR,
   OLIVE_OIL_EMISSION_FACTOR,
 ];
+
+export const carbonEmissionFactorsFactory = (): CarbonEmissionFactor[] =>
+  CARBON_EMISSION_FACTORS.map(
+    ({ name, unit, emissionCO2eInKgPerUnit, source }) =>
+      new CarbonEmissionFactor({
+        name,
+        unit,
+        emissionCO2eInKgPerUnit,
+        source,
+      })
+  );
