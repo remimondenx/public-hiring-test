@@ -1,5 +1,6 @@
 {
   "coveragePathIgnorePatterns": ["seed-*"],
+  "maxWorkers": 1,
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": "./src",
   "testEnvironment": "node",
