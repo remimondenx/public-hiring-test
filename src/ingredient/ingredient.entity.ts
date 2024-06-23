@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import {
   BaseEntity,
   Column,
@@ -11,10 +12,18 @@ import { UNIT } from "../shared/enum/unit";
 @Entity("ingredients")
 export class Ingredient extends BaseEntity {
   @PrimaryGeneratedColumn()
+  @ApiProperty({
+    example: 1,
+    description: "Id",
+  })
   id: number;
 
   @Column({
     nullable: false,
+  })
+  @ApiProperty({
+    example: "oliveOil",
+    description: "Name",
   })
   name: string;
 
@@ -23,11 +32,20 @@ export class Ingredient extends BaseEntity {
     type: "enum",
     enum: UNIT,
   })
+  @ApiProperty({
+    example: "kg",
+    enum: UNIT,
+    description: "Quantity unit",
+  })
   unit: UNIT;
 
   @Column({
     type: "float",
     nullable: false,
+  })
+  @ApiProperty({
+    example: 0.2,
+    description: "Quantity",
   })
   quantity: number;
 

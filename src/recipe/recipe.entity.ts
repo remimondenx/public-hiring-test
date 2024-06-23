@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import {
   BaseEntity,
   BeforeInsert,
@@ -12,15 +13,27 @@ import { Ingredient } from "../ingredient/ingredient.entity";
 @Entity("recipes")
 export class Recipe extends BaseEntity {
   @PrimaryGeneratedColumn()
+  @ApiProperty({
+    example: 1,
+    description: "Id",
+  })
   id: number;
 
   @Column({
     nullable: false,
   })
+  @ApiProperty({
+    example: "hamCheesePizza",
+    description: "Name",
+  })
   name: string;
 
   @OneToMany(() => Ingredient, (ingredient) => ingredient.recipe, {
     cascade: true,
+  })
+  @ApiProperty({
+    type: [Ingredient],
+    description: "Recipe ingredients",
   })
   ingredients: Ingredient[];
 

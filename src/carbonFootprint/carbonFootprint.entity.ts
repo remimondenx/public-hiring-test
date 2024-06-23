@@ -1,3 +1,4 @@
+import { ApiProperty } from "@nestjs/swagger";
 import {
   BaseEntity,
   Column,
@@ -11,6 +12,10 @@ import { CARBON_EMISSION_FACTOR_SOURCE } from "../shared/enum/carbonEmissionFact
 @Entity("carbon_footprints")
 export class CarbonFootprint extends BaseEntity {
   @PrimaryGeneratedColumn()
+  @ApiProperty({
+    example: 1,
+    description: "Id",
+  })
   id: number;
 
   @ManyToOne(() => Recipe, (recipe) => recipe.carbonFootprints)
@@ -21,10 +26,19 @@ export class CarbonFootprint extends BaseEntity {
     type: "enum",
     enum: CARBON_EMISSION_FACTOR_SOURCE,
   })
+  @ApiProperty({
+    example: "Agrybalise",
+    enum: CARBON_EMISSION_FACTOR_SOURCE,
+    description: "Source used to compute carbon footprint",
+  })
   source: CARBON_EMISSION_FACTOR_SOURCE;
 
   @Column({
     type: "float",
+  })
+  @ApiProperty({
+    example: 0.2,
+    description: "CO2e emission in kg per unit",
   })
   emissionCO2eInKgPerUnit: number;
 
